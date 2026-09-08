@@ -7,7 +7,8 @@ const redis= new Redis(process.env.REDIS_URL||'redis://127.0.0.1:6379')
 const LUA =`
 local key = KEYS[1]
 local capacity = tonumber(ARGV[1])
-local now = tonumber(ARGV[2])
+local refill = tonumber(ARGV[2])
+local now = tonumber(ARGV[3])
 
 local data = redis.call('HMGET', key, 'tokens', 'last')
 local tokens = tonumber(data[1])
