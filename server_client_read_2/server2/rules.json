@@ -1,0 +1,6 @@
+{
+    "orders": {
+      "capacity": 5,
+      "refillPerSecond": 5
+    }
+}

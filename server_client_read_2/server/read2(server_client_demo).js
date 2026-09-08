@@ -56,6 +56,11 @@ app.listen(3000, () => console.log('open http://localhost:3000')) */
 //below is when react comes into picture
 
 
+
+
+/* 
+
+appln 1
 const express = require('express')
 const app = express()
 app.use(express.json())
@@ -87,4 +92,84 @@ app.put('/api/tour/:id', (req, res) => {
     res.json({ success: true, tour })
   })
 
-app.listen(3000, () => console.log('open http://localhost:3000'))
+app.listen(3000, () => console.log('open http://localhost:3000')) */
+
+/* 
+
+//appln 2
+
+const express = require('express')
+const app = express()
+app.use(express.json())
+const cors = require('cors')
+app.use(cors())
+
+const tours = [
+  { id: 1, name: 'Hood River', price: 99.99, available: true },
+  { id: 2, name: 'Oregon Coast', price: 149.95, available: false },
+  { id: 3, name: 'Bend', price: 199, available: true },
+]
+
+app.get('/api/tours', (req, res) => {
+  let list = tours
+
+  // ?available=true   → req.query.available === "true"  (string)
+  if (req.query.available === 'true') {
+    list = list.filter(t => t.available)
+  }
+  if (req.query.available === 'false') {
+    list = list.filter(t => !t.available)
+  }
+
+  // ?minPrice=100
+  if (req.query.minPrice) {
+    const min = Number(req.query.minPrice)
+    list = list.filter(t => t.price >= min)
+  }
+
+  res.json(list)
+})
+
+app.listen(3000, () => console.log('open http://localhost:3000')) */
+
+
+/* 
+//appln 3
+
+
+const { MongoClient } = require('mongodb')
+require('dotenv').config()
+
+const express = require('express')
+const app = express()
+app.use(express.json())
+const cors = require('cors')
+app.use(cors())
+
+const client = new MongoClient(process.env.MONGODB_URI)
+let signups // collection handle
+
+app.post('/api/newsletter-signup',async (req, res) => {
+  console.log(req.body._csrf)
+  console.log(req.body.name)
+  console.log(req.body.email)
+  const { name, email } = req.body //IMPORTANT TO DESTRUCTURE THE BODY AND INITIALIZE THE VARIABLES
+
+  await signups.insertOne({ name, email, createdAt: new Date() })
+  res.json({ result: 'success' })
+  // on failure: res.status(400).json({ err: 'invalid email' })
+})
+
+async function start() {
+  await client.connect()
+  const db = client.db() // uses the db name in the URI
+  signups = db.collection('signups')
+
+  app.listen(3000, () => console.log('listening'))
+}
+
+start()
+ */
+
+
+
