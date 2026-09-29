@@ -140,24 +140,51 @@ export default App */
 
 import { useState } from 'react'
 
+
+/* burst() runs
+Array.from calls (_, i) => { ... } for i = 0
+that inner function returns a Promise to Array.from
+Array.from puts it in slot 0 of calls
+same for i = 1 … 19
+burst continues to Promise.all(calls)
+ */
 function App() {
 async function burst() {
-  const calls = Array.from({ length: 20 }, (_, i) =>
-    fetch('http://localhost:3000/api/orders', {
+  const calls = Array.from({ length: 20 }, (_, i) =>{
+    const port = i%2 ===0? 3000:4000
+
+    return fetch(`http://localhost:${port}/api/orders`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ n: i }),
-    }).then(async r => ({ status: r.status, body: await r.json() }))
-  )
+    }).then(async r => ({ status: r.status,port, body: await r.json() }))
+})
   const results = await Promise.all(calls)
-  const ok = results.filter(r => r.status === 200).length
-  const blocked = results.filter(r => r.status === 429).length
-  console.log({ ok, blocked, results })
+  const ok = results.filter(r => r.status === 200)
+  const blocked = results.filter(r => r.status === 429)
+  console.log({
+    ok: ok.length,
+    blocked: blocked.length,
+    okOn3000: ok.filter(r => r.port === 3000).length,
+    okOn4000: ok.filter(r => r.port === 4000).length,
+    results,
+  })
+}
+
+async function drain() {
+  const r = await fetch('http://localhost:3000/api/drain', { method: 'POST' })
+  console.log(await r.json())
+}
+async function queueStats() {
+  const r = await fetch('http://localhost:3000/api/queue')
+  console.log(await r.json())
 }
 
 return(
     <div>
       <button onClick={burst}>Send Request</button>
+      <button onClick={queueStats}>Queue stats</button>
+    <button onClick={drain}>Drain queue</button>
     </div>
   )
 }

@@ -1,5 +1,6 @@
 const rules=require('./rules.json')
 const {takeToken}= require('./tokenBucket')
+const { ordersQueue } = require('./queue')
 
 function rateLimiter(ruleName){
     const rule = rules[ruleName]
@@ -15,9 +16,15 @@ function rateLimiter(ruleName){
             res.set('X-RateLimit-Retry-After', String(result.retryAfterSec))
 
             if (!result.allowed) {
+                const job = await ordersQueue.add('order', {
+                    body: req.body,
+                    path: req.path,
+                  })
                 return res.status(429).json({
                   error: 'too many requests',
                   retryAfterSec: result.retryAfterSec,
+                  queued: true,
+                  jobId: job.id,
                 })
               }
               next()
